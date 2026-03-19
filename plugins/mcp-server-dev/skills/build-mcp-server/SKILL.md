@@ -67,7 +67,8 @@ A hosted service speaking MCP over streamable HTTP. This is the **recommended pa
 
 **Choose this unless** the server *must* touch the user's local machine.
 
-→ Scaffold with `references/remote-http-scaffold.md`
+→ **Fastest deploy:** Cloudflare Workers — `references/deploy-cloudflare-workers.md` (zero to live URL in two commands)
+→ **Portable Node/Python:** `references/remote-http-scaffold.md` (Express or FastMCP, runs on any host)
 
 ### Elicitation (structured input, no UI build)
 
@@ -157,7 +158,7 @@ If the user already has a language/stack in mind, go with it — both produce id
 
 Once you've settled the four decisions (deployment model, tool pattern, framework, auth), do **one** of:
 
-1. **Remote HTTP, no UI** → Scaffold inline using `references/remote-http-scaffold.md`. This skill can finish the job.
+1. **Remote HTTP, no UI** → Scaffold inline using `references/remote-http-scaffold.md` (portable) or `references/deploy-cloudflare-workers.md` (fastest deploy). This skill can finish the job.
 2. **MCP app (UI widgets)** → Summarize the decisions so far, then load the **`build-mcp-app`** skill.
 3. **MCPB (bundled local)** → Summarize the decisions so far, then load the **`build-mcpb`** skill.
 4. **Local stdio prototype** → Scaffold inline (simplest case), flag the MCPB upgrade path.
@@ -198,8 +199,10 @@ Tools are one of three server primitives. Most servers start with tools and neve
 ## Reference files
 
 - `references/remote-http-scaffold.md` — minimal remote server in TS SDK and FastMCP
+- `references/deploy-cloudflare-workers.md` — fastest deploy path (Workers-native scaffold)
 - `references/tool-design.md` — writing tool descriptions and schemas Claude understands well
 - `references/auth.md` — OAuth, CIMD, DCR, token storage patterns
 - `references/resources-and-prompts.md` — the two non-tool primitives
 - `references/elicitation.md` — spec-native user input mid-tool (capability check + fallback)
 - `references/server-capabilities.md` — instructions, sampling, roots, logging, progress, cancellation
+- `references/versions.md` — version-sensitive claims ledger (check when updating)

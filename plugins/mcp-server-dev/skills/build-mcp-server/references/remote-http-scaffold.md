@@ -155,6 +155,48 @@ server.registerTool(
 
 ---
 
+## Test it
+
+The MCP Inspector connects to any transport and lets you poke tools interactively.
+
+```bash
+# Interactive — opens a UI on localhost:6274
+npx @modelcontextprotocol/inspector
+# → select "Streamable HTTP", paste http://localhost:3000/mcp, Connect
+```
+
+For scripted checks (CI, smoke tests):
+
+```bash
+npx @modelcontextprotocol/inspector --cli http://localhost:3000/mcp \
+  --transport http --method tools/list
+
+npx @modelcontextprotocol/inspector --cli http://localhost:3000/mcp \
+  --transport http --method tools/call --tool-name search_items --tool-arg query=test
+```
+
+---
+
+## Connect users
+
+Once deployed, users add the URL directly — no install step.
+
+| Surface | How |
+|---|---|
+| **Claude Code** | `claude mcp add --transport http <name> <url>` (add `--scope user` for global, `--header "Authorization: Bearer ..."` for auth) |
+| **Claude Desktop / Claude.ai** | Settings → Connectors → Add custom connector. **Not** `claude_desktop_config.json` — remote servers configured there are ignored. |
+| **Connector directory** | Anthropic maintains a submission guide for listing in the public connector directory. |
+
+---
+
+## Deploy
+
+**Fastest path:** Cloudflare Workers — two commands from zero to a live `https://` URL on the free tier. Uses a Workers-native scaffold (not Express). → `deploy-cloudflare-workers.md`
+
+**This Express scaffold** runs on any Node host — Render, Railway, Fly.io, a VPS. Containerize it (`node:20-slim`, copy, `npm ci`, `node dist/server.js`) and ship. FastMCP is the same story with a Python base image.
+
+---
+
 ## Deployment checklist
 
 - [ ] `POST /mcp` responds to `initialize` with server capabilities

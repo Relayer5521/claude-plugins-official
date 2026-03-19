@@ -174,16 +174,17 @@ Keep widgets **small and single-purpose**. A picker picks. A chart displays. Don
 **Install:**
 
 ```bash
-npm install @modelcontextprotocol/sdk @modelcontextprotocol/ext-apps zod
+npm install @modelcontextprotocol/sdk @modelcontextprotocol/ext-apps zod express
 ```
 
 **Server (`src/server.ts`):**
 
 ```typescript
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { registerAppTool, registerAppResource, RESOURCE_MIME_TYPE }
   from "@modelcontextprotocol/ext-apps/server";
+import express from "express";
 import { readFileSync } from "node:fs";
 import { z } from "zod";
 
@@ -206,8 +207,18 @@ registerAppResource(server, "Contact Picker", "ui://widgets/picker.html", {},
   }),
 );
 
-await server.connect(new StdioServerTransport());
+const app = express();
+app.use(express.json());
+app.post("/mcp", async (req, res) => {
+  const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+  res.on("close", () => transport.close());
+  await server.connect(transport);
+  await transport.handleRequest(req, res, req.body);
+});
+app.listen(process.env.PORT ?? 3000);
 ```
+
+For local-only widget apps (driving a desktop app, reading local files), swap the transport to `StdioServerTransport` and package via the `build-mcpb` skill.
 
 **Widget (`widgets/picker.html`):**
 
