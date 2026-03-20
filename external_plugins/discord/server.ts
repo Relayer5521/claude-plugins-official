@@ -58,6 +58,15 @@ if (!TOKEN) {
 }
 const INBOX_DIR = join(STATE_DIR, 'inbox')
 
+// Last-resort safety net — without these the process dies silently on any
+// unhandled promise rejection. With them it logs and keeps serving tools.
+process.on('unhandledRejection', err => {
+  process.stderr.write(`discord channel: unhandled rejection: ${err}\n`)
+})
+process.on('uncaughtException', err => {
+  process.stderr.write(`discord channel: uncaught exception: ${err}\n`)
+})
+
 const client = new Client({
   intents: [
     GatewayIntentBits.DirectMessages,
@@ -342,7 +351,7 @@ function checkApprovals(): void {
   }
 }
 
-if (!STATIC) setInterval(checkApprovals, 5000)
+if (!STATIC) setInterval(checkApprovals, 5000).unref()
 
 // Discord caps messages at 2000 chars (hard limit — larger sends reject).
 // Split long replies, preferring paragraph boundaries when chunkMode is
@@ -637,6 +646,25 @@ mcp.setRequestHandler(CallToolRequestSchema, async req => {
 
 await mcp.connect(new StdioServerTransport())
 
+// When Claude Code closes the MCP connection, stdin gets EOF. Without this
+// the gateway stays connected as a zombie holding resources.
+let shuttingDown = false
+function shutdown(): void {
+  if (shuttingDown) return
+  shuttingDown = true
+  process.stderr.write('discord channel: shutting down\n')
+  setTimeout(() => process.exit(0), 2000)
+  void Promise.resolve(client.destroy()).finally(() => process.exit(0))
+}
+process.stdin.on('end', shutdown)
+process.stdin.on('close', shutdown)
+process.on('SIGTERM', shutdown)
+process.on('SIGINT', shutdown)
+
+client.on('error', err => {
+  process.stderr.write(`discord channel: client error: ${err}\n`)
+})
+
 client.on('messageCreate', msg => {
   if (msg.author.bot) return
   handleInbound(msg).catch(e => process.stderr.write(`discord: handleInbound failed: ${e}\n`))
@@ -685,7 +713,7 @@ async function handleInbound(msg: Message): Promise<void> {
   // forgeable by any allowlisted sender typing that string.
   const content = msg.content || (atts.length > 0 ? '(attachment)' : '')
 
-  void mcp.notification({
+  mcp.notification({
     method: 'notifications/claude/channel',
     params: {
       content,
@@ -698,6 +726,8 @@ async function handleInbound(msg: Message): Promise<void> {
         ...(atts.length > 0 ? { attachment_count: String(atts.length), attachments: atts.join('; ') } : {}),
       },
     },
+  }).catch(err => {
+    process.stderr.write(`discord channel: failed to deliver inbound to Claude: ${err}\n`)
   })
 }
 
@@ -705,4 +735,7 @@ client.once('ready', c => {
   process.stderr.write(`discord channel: gateway connected as ${c.user.tag}\n`)
 })
 
-await client.login(TOKEN)
+client.login(TOKEN).catch(err => {
+  process.stderr.write(`discord channel: login failed: ${err}\n`)
+  process.exit(1)
+})
