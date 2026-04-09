@@ -148,6 +148,17 @@
       "homepage": "https://github.com/awslabs/agent-plugins"
     },
     {
+      "name": "box",
+      "description": "Work with your Box content directly from Claude Code — search files, organize folders, collaborate with your team, and use Box AI to answer questions, summarize documents, and extract data without leaving your workflow.",
+      "category": "productivity",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/box/box-for-ai.git",
+        "sha": "6f4ec3549f3e869b115628403555b1c9220b2b34"
+      },
+      "homepage": "https://github.com/box/box-for-ai"
+    },
+    {
       "name": "brightdata-plugin",
       "description": "Web scraping, Google search, structured data extraction, and MCP server integration powered by Bright Data. Includes 7 skills: scrape any webpage as markdown (with bot detection/CAPTCHA bypass), search Google with structured JSON results, extract data from 40+ websites (Amazon, LinkedIn, Instagram, TikTok, YouTube, and more), orchestrate Bright Data's 60+ MCP tools, built-in best practices for Web Unlocker, SERP API, Web Scraper API, and Browser API, Python SDK best practices for the brightda...",
       "source": {
