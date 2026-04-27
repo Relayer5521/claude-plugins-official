@@ -135,7 +135,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/astronomer/agents.git",
-        "sha": "5935c4330dea4dfb8e93568956b10a543ecdb3d1"
+        "sha": "9082457d20c02346a8c4931c4f822a846ff4ce52"
       },
       "homepage": "https://github.com/astronomer/agents"
     },
@@ -299,7 +299,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/brightdata/skills.git",
-        "sha": "44b24797d82cfd535c5b97831d5c6ba86c9d60df"
+        "sha": "6f7260cf2b30438f5b68786dd77d561499c552e0"
       },
       "homepage": "https://docs.brightdata.com"
     },
@@ -310,7 +310,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/cap-js/mcp-server.git",
-        "sha": "4d59d7070a52761a9b8028cbe710c8d7477cbc92"
+        "sha": "8052a423937385009513036313229d519d42f46b"
       },
       "homepage": "https://cap.cloud.sap/"
     },
@@ -321,7 +321,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/ChromeDevTools/chrome-devtools-mcp.git",
-        "sha": "a1612be8e01401cf1711c64bc2ef5da5763ba956"
+        "sha": "c9c1683b67ac927a5cd5178692d1de7d8e06617b"
       },
       "homepage": "https://github.com/ChromeDevTools/chrome-devtools-mcp"
     },
@@ -406,7 +406,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/cloudflare/skills.git",
-        "sha": "0397d7d88fa6ac7517a88389622eb0799e86ded2"
+        "sha": "0438a075b419f737eb091d1c91800b7387e3a75f"
       },
       "description": "Skills for the Cloudflare developer platform: Workers, Durable Objects, Agents SDK, MCP servers, Wrangler CLI, and web performance.",
       "category": "deployment",
@@ -515,7 +515,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/astronomer/agents.git",
-        "sha": "5935c4330dea4dfb8e93568956b10a543ecdb3d1"
+        "sha": "9082457d20c02346a8c4931c4f822a846ff4ce52"
       },
       "homepage": "https://github.com/astronomer/agents"
     },
@@ -538,7 +538,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/astronomer/agents.git",
-        "sha": "5935c4330dea4dfb8e93568956b10a543ecdb3d1"
+        "sha": "9082457d20c02346a8c4931c4f822a846ff4ce52"
       },
       "homepage": "https://github.com/astronomer/agents"
     },
@@ -617,7 +617,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/exa-labs/exa-mcp-server.git",
-        "sha": "bd2ccdd52ca7a35fbc2207ad266bb2a961c0e793"
+        "sha": "b63ef1980052eec0931a76fc2a47046908fce503"
       },
       "homepage": "https://exa.ai/docs/reference/exa-mcp"
     },
@@ -656,7 +656,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/fastly/fastly-agent-toolkit.git",
-        "sha": "329331c887512850f13e481b45c4298c0387a4d2"
+        "sha": "138eb41885b735c4424d8f855ac0d537d0d24941"
       },
       "homepage": "https://github.com/fastly/fastly-agent-toolkit/blob/main/README.md"
     },
@@ -734,7 +734,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/followrabbit-ai/awesome-rabbit.git",
-        "sha": "6926154501300d348a7b50d47479648fe87985b6"
+        "sha": "cce25b74856ab3574474d3b0b21bd75a60926086"
       },
       "homepage": "https://subscriptions.agentic.followrabbit.ai/"
     },
@@ -1051,7 +1051,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/mongodb/agent-skills.git",
-        "sha": "24529d9540b962d57f30e75d25071bebea5809ad"
+        "sha": "10781ada299bbc5d90b65f952956a57996dad5ee"
       },
       "homepage": "https://www.mongodb.com/docs/mcp-server/overview/"
     },
@@ -1090,7 +1090,7 @@
         "url": "https://github.com/oracle/netsuite-suitecloud-sdk.git",
         "path": "packages/agent-skills",
         "ref": "master",
-        "sha": "43bacf43763e1eedd0892b4652be3d45df94f0e7"
+        "sha": "8b255da5b095e826aa90d7e914c445489b8b2a43"
       },
       "strict": false,
       "skills": [
@@ -1145,7 +1145,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/Optimal-AI/optibot-skill.git",
-        "sha": "ce2be448ee713606aa653fc93ef2f98a200fe327"
+        "sha": "8ccb6f895e23700966c18b8e7a6f50b71d307d49"
       },
       "homepage": "https://getoptimal.ai"
     },
@@ -1249,7 +1249,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/gitroomhq/postiz-agent.git",
-        "sha": "37d627244c53a4b3a7ca94c52cc2db13aaaf468e"
+        "sha": "d76c99a304875bca8eed9875dd18e03a3f4725aa"
       },
       "homepage": "https://postiz.com/agent"
     },
@@ -1409,7 +1409,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/Digital-Process-Tools/claude-remember.git",
-        "sha": "914445ac5f06a164800ea90ba4db41a0486321ae"
+        "sha": "871daa2e673a3ff5dc1578984a184b8625bd66b5"
       },
       "homepage": "https://github.com/Digital-Process-Tools/claude-remember"
     },
@@ -1819,7 +1819,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/VantaInc/vanta-mcp-plugin.git",
-        "sha": "46e5bebf0484f08fc4a3c4054437cf5ec06298c9"
+        "sha": "d48fda4138eec57f5cdee068ed5799f95b9af54d"
       },
       "homepage": "https://help.vanta.com/en/articles/14094979-connecting-to-vanta-mcp#h_887ce3f337"
     },
@@ -1878,7 +1878,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/wix/skills.git",
-        "sha": "bf25b5a45b2413b3581f3dcbcd63f3737791a051"
+        "sha": "44f0b0d98a6f24f9c00b941dce57e017677e3ad8"
       },
       "homepage": "https://dev.wix.com/docs/wix-cli/guides/development/about-wix-skills"
     },
@@ -1901,7 +1901,7 @@
         "url": "https://github.com/zapier/zapier-mcp.git",
         "path": "plugins/zapier",
         "ref": "main",
-        "sha": "76c4669321847c8f72a6e0462c17f29fd437519a"
+        "sha": "ecd7c7220c63a62a9702b76276b6a05f740d8c18"
       },
       "homepage": "https://github.com/zapier/zapier-mcp/tree/main/plugins/zapier"
     },
