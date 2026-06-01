@@ -27,7 +27,7 @@ from typing import Optional, Tuple, Dict, Any, List
 
 import extensibility
 import review_api
-from _base import debug_log, _record_usage, _PV, PROVENANCE_TAG, state_dir as _resolve_state_dir  # noqa: F401
+from _base import debug_log, _record_usage, _record_http_error, _PV, PROVENANCE_TAG, state_dir as _resolve_state_dir  # noqa: F401
 from session_state import with_locked_state
 
 
@@ -368,6 +368,7 @@ def _call_claude_via_sdk(prompt, output_schema, *, max_tokens=16000, model=None)
         except Exception as e:
             debug_log(f"3P sdk-single-turn: SDK unavailable ({e})")
             _last_call_claude_http_error = -1
+            _record_http_error(-1)
             return None
 
     cli_path = os.environ.get("SG_AGENTIC_CLI_PATH") or None
@@ -425,6 +426,7 @@ def _call_claude_via_sdk(prompt, output_schema, *, max_tokens=16000, model=None)
     except _asyncio.TimeoutError:
         debug_log("3P sdk-single-turn: timeout after 60s")
         _last_call_claude_http_error = -1
+        _record_http_error(-1)
         return None
     except Exception as e:
         debug_log(f"3P sdk-single-turn: query failed ({e})")
@@ -433,6 +435,7 @@ def _call_claude_via_sdk(prompt, output_schema, *, max_tokens=16000, model=None)
             for _l in _captured_stderr[:20]:
                 debug_log(f"  | {_l.rstrip()}")
         _last_call_claude_http_error = -1
+        _record_http_error(-1)
         return None
 
 
@@ -542,6 +545,7 @@ def _call_claude(prompt, output_schema, thinking_budget=10000, max_tokens=16000,
                 error_body = e.read().decode("utf-8") if e.fp else ""
                 debug_log(f"API error: {e.code} - {error_body[:200]}")
                 _last_call_claude_http_error = e.code
+                _record_http_error(e.code)
                 return None
         except (urllib.error.URLError, TimeoutError) as e:
             if attempt < 2:
@@ -551,6 +555,7 @@ def _call_claude(prompt, output_schema, thinking_budget=10000, max_tokens=16000,
             else:
                 debug_log(f"Request failed after retries: {e}")
                 _last_call_claude_http_error = -1
+                _record_http_error(-1)
                 return None
 
     if not response_data:
@@ -559,6 +564,7 @@ def _call_claude(prompt, output_schema, thinking_budget=10000, max_tokens=16000,
         # call uses the token; record the 401 so callers don't see error=None.
         if _last_call_claude_http_error is None:
             _last_call_claude_http_error = 401
+            _record_http_error(401)
         return None
 
     # Find the text block (skip thinking blocks)

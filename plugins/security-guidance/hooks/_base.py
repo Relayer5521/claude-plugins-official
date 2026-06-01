@@ -116,7 +116,18 @@ _PV = _read_plugin_version_int()
 # Emitted via _usage_metrics() into the existing emit_metrics() channel so
 # hook metrics rows carry per-invocation token/cost totals
 # alongside the existing skip_reason / vulns_found fields.
-_USAGE = {"in": 0, "out": 0, "cr": 0, "cw": 0, "cost": 0.0, "n": 0}
+_USAGE = {
+    "in": 0, "out": 0, "cr": 0, "cw": 0, "cost": 0.0, "n": 0,
+    # HTTP error visibility (#2098 visibility gap — see emit comment in
+    # _usage_metrics). Without this, API failures from `_call_claude` left
+    # zero fingerprint in telemetry: the call returns None, the caller's
+    # emit_metrics carries no api_calls field, and the failure is
+    # indistinguishable from "no review needed". The deprecation outage
+    # that broke every commit-review LLM call was invisible until users
+    # reported it manually.
+    "http_err_last": 0,    # most recent HTTP error code this invocation
+    "http_err_count": 0,   # total HTTP errors (4xx + 5xx + network)
+}
 _USAGE_LOCK = threading.Lock()
 
 # $/Mtok (input, output). Used only for the raw-HTTP path; the SDK path
@@ -166,19 +177,55 @@ def _record_usage(usage, model, cost_usd=None):
         _USAGE["n"] += 1
 
 
+def _record_http_error(status):
+    """Record an HTTP error from an LLM API call. `status` is the HTTP
+    status code (integer 400–599) or -1 for network/timeout errors. Stored
+    in `_USAGE["http_err_last"]` (most recent) and counted in
+    `_USAGE["http_err_count"]`. Snapshot via `_usage_metrics()` so every
+    subsequent `emit_metrics` includes the failure fingerprint.
+
+    Background: without this, the most recent example was the #2098
+    deprecation 400. Every hook fire's LLM call returned HTTP 400; the
+    plugin caught it and returned None; the emit_metrics carried no
+    api_calls field; aggregate dashboards looked normal. The failure
+    only became visible when a user manually reported errors out of
+    their debug log. With this field, a category-of-failure spike (4xx,
+    5xx, or -1 network) is queryable from BQ in real time.
+    """
+    try:
+        s = int(status)
+    except (TypeError, ValueError):
+        return
+    with _USAGE_LOCK:
+        _USAGE["http_err_last"] = s
+        _USAGE["http_err_count"] += 1
+
+
 def _usage_metrics():
     """Snapshot the accumulator as metric keys. Returns {} when no API calls
-    were made so skip-path emits don't burn key budget. cost_usd rounded to
-    1e-6 to keep the float finite/short for the zod schema."""
+    AND no HTTP errors were made so skip-path emits don't burn key budget.
+    cost_usd rounded to 1e-6 to keep the float finite/short for the zod
+    schema.
+
+    HTTP errors (`http_err_last`, `http_err_count`) emitted ONLY when
+    `http_err_count > 0` so successful calls don't pad every metrics row
+    with two zero fields.
+    """
     with _USAGE_LOCK:
-        if _USAGE["n"] == 0:
+        if _USAGE["n"] == 0 and _USAGE["http_err_count"] == 0:
             return {}
-        return {
-            "tok_in": _USAGE["in"],
-            "tok_out": _USAGE["out"],
-            "tok_cache_r": _USAGE["cr"],
-            "tok_cache_w": _USAGE["cw"],
-            "cost_usd": round(_USAGE["cost"], 6),
-            "api_calls": _USAGE["n"],
-        }
+        out = {}
+        if _USAGE["n"] > 0:
+            out.update({
+                "tok_in": _USAGE["in"],
+                "tok_out": _USAGE["out"],
+                "tok_cache_r": _USAGE["cr"],
+                "tok_cache_w": _USAGE["cw"],
+                "cost_usd": round(_USAGE["cost"], 6),
+                "api_calls": _USAGE["n"],
+            })
+        if _USAGE["http_err_count"] > 0:
+            out["http_err_last"] = _USAGE["http_err_last"]
+            out["http_err_count"] = _USAGE["http_err_count"]
+        return out
 

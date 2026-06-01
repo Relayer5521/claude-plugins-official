@@ -42,6 +42,71 @@ HOOK_PY_INCOMPATIBLE = 6  # hook interpreter is <3.10 — SDK syntax can't load
                           # here no matter how the venv was built. See #2071.
 
 
+# Phase + err-kind integer encoding for sdk_bootstrap_phase / sdk_bootstrap_err.
+#
+# Earlier versions emitted these as STRINGS (e.g. "pip", "dns_fail"). CC's
+# plugin-metrics pipeline silently drops plugin-emitted string values —
+# only `bool|finite-number` plugin metrics reach BigQuery. (CC-core
+# metrics like `subscription_type` are exempt because they're injected
+# downstream of plugin validation.) Confirmed empirically: 185K
+# BUILD_FAILED rows in BQ had `sdk_bootstrap_phase`/`sdk_bootstrap_err`
+# = NULL despite the Python code emitting them. This left ~28K
+# BUILD_FAILED sessions/day with no diagnostic split — flying blind on
+# the real failure modes (pip-no-match vs dns-fail vs ssl-verify etc.).
+#
+# Fix: encode as small integers per the maps below. Values are
+# APPEND-ONLY for telemetry stability. Reserve 99 as the "unknown /
+# uncategorized" bucket so an unmapped err_kind (e.g., a new exception
+# type) still emits a non-zero signal.
+SDK_BOOTSTRAP_PHASE_CODES = {
+    "pre":  1,  # pre-venv (state_dir.mkdir, sentinel open)
+    "venv": 2,  # python -m venv --clear
+    "pip":  3,  # pip install
+    "main": 4,  # uncaught exception above main()
+}
+SDK_BOOTSTRAP_ERR_CODES = {
+    "pip_no_match":       1,
+    "dns_fail":           2,
+    "conn_refused":       3,
+    "ssl_verify":         4,
+    "perm_denied":        5,
+    "no_pip":             6,
+    "disk_full":          7,
+    "proxy_auth":         8,
+    "stderr_timeout":     9,  # pip stderr containing "timeout"/"timed out"
+    "subprocess_timeout": 10, # subprocess.TimeoutExpired (>120s)
+    # 11–98 reserved for future categories; APPEND-ONLY.
+    # 99 catches everything else (including "exc:<TypeName>" and "other:<tail>"
+    # — the original string is debug-loggable but the integer is what makes
+    # it to telemetry).
+    "_uncategorized":     99,
+}
+
+
+def _encode_phase(s):
+    """Map err_phase string to its telemetry integer code, or 0 if unset.
+    Empty/None → 0 lets `if encoded:` cleanly skip emission. Per
+    SDK_BOOTSTRAP_PHASE_CODES, valid codes are 1-4."""
+    return SDK_BOOTSTRAP_PHASE_CODES.get((s or "").strip(), 0)
+
+
+def _encode_err_kind(s):
+    """Map err_kind string to its telemetry integer code, or 0 if unset.
+    Direct hits use the static map; "exc:<X>" and "other:<tail>" both
+    collapse to _uncategorized (99) — the raw string survives in debug
+    logs, only the integer reaches BQ."""
+    s = (s or "").strip()
+    if not s:
+        return 0
+    if s in SDK_BOOTSTRAP_ERR_CODES:
+        return SDK_BOOTSTRAP_ERR_CODES[s]
+    # Prefix matches for the catch-all categories
+    if s.startswith("exc:") or s.startswith("other:") or s == "other":
+        return SDK_BOOTSTRAP_ERR_CODES["_uncategorized"]
+    # Unknown string — still emit as uncategorized rather than dropping
+    return SDK_BOOTSTRAP_ERR_CODES["_uncategorized"]
+
+
 def _sdk_on_syspath() -> bool:
     # find_spec is ~10ms; actually importing the SDK pulls in
     # transitive deps and costs ~800ms — too heavy for a
@@ -288,21 +353,25 @@ if __name__ == "__main__":
     # and takes the FIRST non-{"async":...} JSON line as the hook response;
     # its `metrics` key is forwarded to the hook metrics event on the
     # next attachments pass. Must be a single line — the registry splits on
-    # \n and json-parses each independently. Values must be bool|number OR
-    # short strings (CC accepts string metric values if they're not
-    # null). Stay inside the 10-key emit cap.
+    # \n and json-parses each independently.
+    #
+    # IMPORTANT — values must be bool|finite-number. The validation comment
+    # has historically said "or short strings" but that was wrong: CC's
+    # plugin-metrics pipeline silently drops plugin-emitted string values.
+    # Stay inside the 10-key emit cap.
     metrics: dict[str, object] = {
         "sdk_bootstrap": outcome,
         "sdk_bootstrap_ms": round((time.perf_counter() - t0) * 1000),
     }
     if err_kind:
-        # Truncate defensively; categorized values are <40 chars but the
-        # `other:<tail>` mode could be longer. err_phase may be empty for
-        # pre-venv failures (state_dir.mkdir perm-denied, sentinel O_EXCL
-        # raising a non-FileExistsError OSError) — emit as "pre" so the
-        # err_kind isn't silently dropped.
-        metrics["sdk_bootstrap_phase"] = (err_phase or "pre")[:16]
-        metrics["sdk_bootstrap_err"] = err_kind[:96]
+        # Encode phase + err_kind as integer codes (see
+        # SDK_BOOTSTRAP_PHASE_CODES / SDK_BOOTSTRAP_ERR_CODES). Earlier
+        # versions emitted these as strings and CC dropped them — restoring
+        # the diagnostic split that 28K BUILD_FAILED/day need to triage by
+        # root cause. err_phase defaults to "pre" when empty (pre-venv
+        # failure path, e.g. state_dir.mkdir perm-denied).
+        metrics["sdk_bootstrap_phase"] = _encode_phase(err_phase or "pre")
+        metrics["sdk_bootstrap_err"] = _encode_err_kind(err_kind)
     pv = _plugin_version_int()
     if pv:
         metrics["pv"] = pv
