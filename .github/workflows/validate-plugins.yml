@@ -8,6 +8,12 @@ on:
       - '*/agents/**'
       - '*/skills/**'
       - '*/commands/**'
+      # `validate` is a required status check, so a PR that touches ONLY workflow
+      # files (e.g. an action-SHA re-pin) would otherwise never trigger validate
+      # and sit "Expected — Waiting for status to be reported" forever (workflow_dispatch
+      # check runs aren't associated with the PR, so they don't satisfy it). Run
+      # validate on workflow changes too so those PRs can clear the gate in-context.
+      - '.github/workflows/**'
   push:
     branches: [main]
     paths:
@@ -32,7 +38,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: anthropics/claude-plugins-community/.github/actions/validate-plugins@f846a0bcb0e721b1f93d60e8b73e91dafc4a1e87
+      - uses: anthropics/claude-plugins-community/.github/actions/validate-plugins@d207465eb6ec02b6f3f1dbb131717830dc9ecc68
         with:
           marketplace-path: .claude-plugin/marketplace.json
           # Official curated marketplace: SHA-pin (I5) is a HARD error.
