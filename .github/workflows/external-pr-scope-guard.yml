@@ -1,0 +1,52 @@
+name: External PR Scope Guard
+
+# Required status check that constrains what a NON-MEMBER pull request may change.
+# Members (write/admin) are unrestricted and skip this check. For a non-member PR this
+# fails unless the PR is an in-scope external contribution per .github/scripts/external-pr-scope.js:
+# it changes ONLY .claude-plugin/marketplace.json, the delta is additions-only (no existing
+# entry modified or removed), and every ADDED entry's source.url is a repo that ALREADY backs
+# a live plugin in this marketplace (the allowed set is derived from the live marketplace —
+# there is no maintained allowlist).
+#
+# Add the scope-guard job as a REQUIRED status check in branch protection for it to block merge.
+#
+# Security: runs on pull_request_target but checks out only the BASE repo (trusted) for the
+# shared script; the head marketplace.json is fetched as DATA via the API and parsed, never executed.
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  scope-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4   # base repo (trusted)
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const author = context.payload.pull_request.user.login;
+
+            const { data: perm } = await github.rest.repos.getCollaboratorPermissionLevel({
+              owner: context.repo.owner, repo: context.repo.repo, username: author,
+            });
+            if (['admin', 'write'].includes(perm.permission)) {
+              console.log(`${author} is ${perm.permission} (member) — scope guard not applicable.`);
+              return;
+            }
+
+            const { evaluate } = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/external-pr-scope.js`);
+            const result = await evaluate({ github, context });
+
+            if (!result.ok) {
+              core.setFailed(
+                `Scope guard: a non-member PR may only ADD marketplace.json entries whose source repo already backs a live plugin here.\n - ` +
+                result.problems.join('\n - ')
+              );
+              return;
+            }
+            console.log(`Scope guard passed: adds ${result.added.join(', ') || 'none'}, all from repos already live here.`);
