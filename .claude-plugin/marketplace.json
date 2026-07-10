@@ -10,7 +10,8 @@
     "adlc": "agentforce-adlc",
     "airwallex": "airwallex-agentos",
     "convex-backend": "convex",
-    "vals": "valtown"
+    "vals": "valtown",
+    "wordpress.com": "build-with-wordpress"
   },
   "plugins": [
     {
