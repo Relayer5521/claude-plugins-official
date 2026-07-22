@@ -816,6 +816,17 @@
       "homepage": "https://github.com/anthropics/claude-plugins-official/tree/main/plugins/claude-md-management"
     },
     {
+      "name": "claude-security",
+      "description": "Deep vulnerability scanning of your own code, run entirely inside your Claude Code session at a chosen effort tier, with every finding challenged before it is reported and the verification tally computed in code. Turns surviving findings into targeted patches, each verified by a panel of agents, that you apply when you choose.",
+      "author": {
+        "name": "Anthropic",
+        "email": "support@anthropic.com"
+      },
+      "source": "./plugins/claude-security",
+      "category": "security",
+      "homepage": "https://github.com/anthropics/claude-plugins-official/tree/main/plugins/claude-security"
+    },
+    {
       "name": "clickhouse",
       "description": "Connect Claude to your ClickHouse Cloud databases. Browse organizations, services, databases, and table schemas. Run read-only SQL queries against your data and get instant analytical answers. Monitor service backups, review billing costs, and inspect ClickPipe configurations - all through natural conversation.",
       "author": {
