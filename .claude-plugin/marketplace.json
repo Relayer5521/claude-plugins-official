@@ -402,7 +402,7 @@
         "url": "https://github.com/aws/agent-toolkit-for-aws.git",
         "path": "plugins/aws-agents-for-devsecops",
         "ref": "main",
-        "sha": "b33847dd218c6ceef176cd5efdcfff50560faf7d"
+        "sha": "08ad220e4e9bbc498821ce9360b3dcdf4813121d"
       },
       "homepage": "https://github.com/aws/agent-toolkit-for-aws"
     },
